@@ -1,5 +1,11 @@
 "use client"
-import { createTodo, deleteTodo, getTodos, toggleTodo } from "@/Controllers"
+import {
+  unwrap,
+  createTodo,
+  deleteTodo,
+  getTodos,
+  toggleTodo,
+} from "@/vmarkis/rpc"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Todo } from "@prisma/client"
 import { useEffect, useState, useTransition } from "react"
@@ -18,11 +24,13 @@ export default function Home() {
 
   const submitHandler: SubmitHandler<FormSchema> = async payload => {
     startTransition(async () => {
-      const todo = await createTodo({
-        is_done: payload.is_done,
-        text: payload.text,
-        title: payload.title,
-      })
+      const todo = await unwrap(
+        createTodo({
+          is_done: payload.is_done,
+          text: payload.text,
+          title: payload.title,
+        })
+      )
 
       setTodos(todos => (todos ? [...todos, todo] : [todo]))
     })
@@ -31,7 +39,7 @@ export default function Home() {
   const errorMessage = Object.values(formState.errors).at(0)?.message
 
   const handleToggleTodo = async (todoId: string, checked: boolean) => {
-    const updatedTodo = await toggleTodo({ checked, todoId })
+    const updatedTodo = await unwrap(toggleTodo({ checked, todoId }))
     setTodos(todos =>
       todos
         ? todos.map(todo => (todo.id === todoId ? updatedTodo : todo))
@@ -46,7 +54,7 @@ export default function Home() {
 
   useEffect(() => {
     const getTodosInit = async () => {
-      const todos = await getTodos(null)
+      const todos = await unwrap(getTodos(null))
       setTodos(todos)
     }
 
